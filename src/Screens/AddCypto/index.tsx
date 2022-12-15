@@ -1,24 +1,68 @@
+import { cryptoStorage } from '@Core';
+import { useNavigation } from '@react-navigation/native';
+import { useStoreActions } from '@Store';
 import { Colors } from '@Styles';
-import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface IProps {}
 
 const AddCypto: React.FC<IProps> = () => {
+  const navigation = useNavigation();
+  const { getCrypto } = useStoreActions((actions) => actions.crypto);
+  const [symbol, setSymbol] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const onAddCrypto = async () => {
+    setLoading(true);
+    try {
+      await getCrypto({ assetKey: symbol });
+      const listCrypto = await cryptoStorage.getListCrypto();
+      if (listCrypto) {
+        const arr = JSON.parse(listCrypto);
+        arr.push(symbol);
+        cryptoStorage.setListCrypto(arr);
+      } else {
+        cryptoStorage.setListCrypto([symbol]);
+      }
+      setLoading(false);
+      navigation.goBack();
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', error?.message);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Add a Cryptocurrency</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Search a cryptocurrency"
-        placeholderTextColor={Colors.gray}
-      />
-      <View style={styles.add}>
-        <TouchableOpacity style={styles.btnAdd}>
-          <Text style={styles.txtAdd}>Add</Text>
-        </TouchableOpacity>
+    <>
+      <View style={styles.container}>
+        <Text style={styles.label}>Add a Cryptocurrency</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Search a cryptocurrency"
+          placeholderTextColor={Colors.gray}
+          onChangeText={(value) => setSymbol(value)}
+        />
+        <View style={styles.add}>
+          <TouchableOpacity onPress={onAddCrypto} style={styles.btnAdd}>
+            <Text style={styles.txtAdd}>Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+      {loading && (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" />
+        </View>
+      )}
+    </>
   );
 };
 
@@ -62,5 +106,15 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loading: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.loading,
+    justifyContent: 'center',
+    alignItems: 'center',
+    top: 0,
+    left: 0,
   },
 });

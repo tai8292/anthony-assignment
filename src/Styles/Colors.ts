@@ -5,4 +5,6 @@ export default {
   red: 'red',
   green: 'green',
   gray: 'gray',
+  loading: '#afafaf6e',
+  orange: '#f5a522',
 };

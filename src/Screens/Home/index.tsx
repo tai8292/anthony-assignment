@@ -1,16 +1,42 @@
 import { UICryptoItem, UIHeader } from '@Components';
-import { useNavigation } from '@react-navigation/native';
+import { cryptoStorage } from '@Core';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useStoreActions, useStoreState } from '@Store';
 import { Colors } from '@Styles';
 import { CryptoType } from 'DataType';
-import React from 'react';
-import { FlatList, ListRenderItem, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  FlatList,
+  ListRenderItem,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 
 interface IProps {}
 
-const fakeData: Array<CryptoType> = [{ id: '1' }, { id: '1' }, { id: '1' }, { id: '1' }];
-
 const Home: React.FC<IProps> = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const { getCryptos } = useStoreActions((actions) => actions.crypto);
+  const { cryptos } = useStoreState((states) => states.crypto);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCryptos = async () => {
+      setLoading(true);
+      const listCrypto = await cryptoStorage.getListCrypto();
+      if (listCrypto) {
+        getCryptos({ assetKeys: JSON.parse(listCrypto) });
+      }
+      setLoading(false);
+    };
+    if (isFocused) {
+      fetchCryptos();
+    }
+  }, [getCryptos, isFocused]);
 
   const renderItem: ListRenderItem<CryptoType> = ({ item, index }) => {
     return <UICryptoItem key={index} data={item} />;
@@ -25,7 +51,7 @@ const Home: React.FC<IProps> = () => {
       <UIHeader title="CryptoTracker Pro" />
       <View style={styles.content}>
         <View>
-          <FlatList bounces={false} data={fakeData} renderItem={renderItem} />
+          <FlatList extraData={cryptos} bounces={false} data={cryptos} renderItem={renderItem} />
         </View>
         <View style={styles.addContainer}>
           <TouchableOpacity onPress={goToAddCypto}>
@@ -33,9 +59,16 @@ const Home: React.FC<IProps> = () => {
           </TouchableOpacity>
         </View>
       </View>
+      {loading && (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" />
+        </View>
+      )}
     </View>
   );
 };
+
+export default Home;
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -54,6 +87,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.black,
   },
+  loading: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
-
-export default Home;

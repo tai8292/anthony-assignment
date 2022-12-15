@@ -1,5 +1,6 @@
 import { Icons } from '@Assets';
 import { Colors } from '@Styles';
+import { formatMoney } from '@Utils';
 import { CryptoType } from 'DataType';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -10,20 +11,53 @@ interface IProps {
 
 const UICryptoItem = (props: IProps) => {
   const { data } = props;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { Asset, market_data } = data;
+  const getColor = () => {
+    if (market_data?.percent_change_btc_last_24_hours) {
+      if (market_data?.percent_change_btc_last_24_hours > 0) {
+        return Colors.green;
+      }
+      if (market_data?.percent_change_btc_last_24_hours < 0) {
+        return Colors.red;
+      }
+    }
+
+    return Colors.orange;
+  };
+
+  const color = getColor();
 
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <Image style={styles.icon} source={Icons.logo} />
         <View style={styles.info}>
-          <Text style={styles.txtName}>Bitcoin</Text>
-          <Text style={styles.txtCode}>BTC</Text>
+          <Text style={styles.txtName}>{Asset?.name}</Text>
+          <Text style={styles.txtCode}>{Asset?.symbol}</Text>
         </View>
         <View>
-          <Text style={styles.txtName}>$7,216.68</Text>
+          <Text style={styles.txtName}>{`$${formatMoney(market_data?.price_usd || 0)}`}</Text>
           <View style={[styles.row, styles.price]}>
-            <Image style={styles.trendIcon} source={Icons.ic_up} />
-            <Text style={styles.txtPercent}>1.82%</Text>
+            {market_data?.percent_change_usd_last_24_hours && (
+              <Image
+                style={[
+                  styles.trendIcon,
+                  {
+                    tintColor: color,
+                    transform: [
+                      {
+                        rotate:
+                          market_data?.percent_change_usd_last_24_hours > 0 ? '0deg' : '180deg',
+                      },
+                    ],
+                  },
+                ]}
+                source={Icons.ic_up}
+              />
+            )}
+            <Text style={[styles.txtPercent, { color: color }]}>
+              {formatMoney(market_data?.percent_change_usd_last_24_hours || 0)}
+            </Text>
           </View>
         </View>
       </View>
@@ -42,10 +76,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  icon: {
-    width: 60,
-    height: 60,
   },
   trendIcon: {
     width: 16,
