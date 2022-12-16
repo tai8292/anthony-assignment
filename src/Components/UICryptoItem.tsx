@@ -14,11 +14,11 @@ const UICryptoItem = (props: IProps) => {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const { Asset, market_data } = data;
   const getColor = () => {
-    if (market_data?.percent_change_btc_last_24_hours) {
-      if (market_data?.percent_change_btc_last_24_hours > 0) {
+    if (market_data?.percent_change_usd_last_24_hours) {
+      if (Number(market_data?.percent_change_usd_last_24_hours) > 0) {
         return Colors.green;
       }
-      if (market_data?.percent_change_btc_last_24_hours < 0) {
+      if (Number(market_data?.percent_change_usd_last_24_hours) < 0) {
         return Colors.red;
       }
     }
